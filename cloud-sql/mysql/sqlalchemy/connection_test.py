@@ -1,11 +1,11 @@
+from contextlib import contextmanager
 import logging
 import os
-import tempfile
-from contextlib import contextmanager
-from typing import Dict, List
+from typing import Dict
 
+import pymysql
 import pytest
-import pg8000
+
 import main
 
 
@@ -58,9 +58,11 @@ def unix_db_connection():
 def _common_setup():
     try:
         pool = main.init_connection_engine()
-    except pg8000.exceptions.InterfaceError as e:
-        logger.warning('Could not connect to the production database. '
-        'If running tests locally, is the cloud_sql_proxy currently running?')
+    except pymysql.err.OperationalError as e:
+        logger.warning(
+            'Could not connect to the production database. '
+            'If running tests locally, is the cloud_sql_proxy currently running?'
+        )
         raise e
 
     with pool.connect() as conn:

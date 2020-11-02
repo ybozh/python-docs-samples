@@ -1,10 +1,11 @@
+from contextlib import contextmanager
 import logging
 import os
-from contextlib import contextmanager
 from typing import Dict, List
 
-import pytest
 import pg8000
+import pytest
+
 import main
 
 
@@ -58,8 +59,10 @@ def _common_setup():
     try:
         pool = main.init_connection_engine()
     except pg8000.exceptions.InterfaceError as e:
-        logger.warning('Could not connect to the production database. '
-        'If running tests locally, is the cloud_sql_proxy currently running?')
+        logger.warning(
+            'Could not connect to the production database. '
+            'If running tests locally, is the cloud_sql_proxy currently running?'
+        )
         raise e
 
     with pool.connect() as conn:
