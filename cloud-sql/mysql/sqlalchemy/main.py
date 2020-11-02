@@ -132,11 +132,14 @@ def init_unix_connection_engine(db_config):
 
 # The SQLAlchemy engine will help manage interactions, including automatically
 # managing a pool of connections to your database
-db = init_connection_engine()
+# global db
+db = None
 
 
 @app.before_first_request
 def create_tables():
+    global db
+    db = db or init_connection_engine()
     # Create tables (if they don't already exist)
     with db.connect() as conn:
         conn.execute(
@@ -148,6 +151,11 @@ def create_tables():
 
 @app.route("/", methods=["GET"])
 def index():
+    context = get_index_context()
+    return render_template('index.html', **context)
+
+
+def get_index_context():
     votes = []
     with db.connect() as conn:
         # Execute the query and fetch all results
@@ -167,10 +175,11 @@ def index():
         # Count number of votes for spaces
         space_result = conn.execute(stmt, candidate="SPACES").fetchone()
         space_count = space_result[0]
-
-    return render_template(
-        "index.html", recent_votes=votes, tab_count=tab_count, space_count=space_count
-    )
+    return {
+        'recent_votes': votes,
+        'space_count': space_count,
+        'tab_count': tab_count,
+    }
 
 
 @app.route("/", methods=["POST"])

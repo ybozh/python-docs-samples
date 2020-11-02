@@ -26,35 +26,53 @@ logger = logging.getLogger()
 
 
 def init_connection_engine():
+    # [START cloud_sql_postgres_sqlalchemy_limit]
+    # [START cloud_sql_postgres_sqlalchemy_backoff]
+    # [START cloud_sql_postgres_sqlalchemy_timeout]
+    # [START cloud_sql_postgres_sqlalchemy_lifetime]
     db_config = {
-        # [START cloud_sql_postgres_sqlalchemy_limit]
+    # [END cloud_sql_postgres_sqlalchemy_limit]
+    # [END cloud_sql_postgres_sqlalchemy_backoff]
+    # [END cloud_sql_postgres_sqlalchemy_timeout]
+    # [END cloud_sql_postgres_sqlalchemy_lifetime]
+
+    # [START cloud_sql_postgres_sqlalchemy_limit]
         # Pool size is the maximum number of permanent connections to keep.
         "pool_size": 5,
         # Temporarily exceeds the set pool_size if no connections are available.
         "max_overflow": 2,
         # The total number of concurrent connections for your application will be
         # a total of pool_size and max_overflow.
-        # [END cloud_sql_postgres_sqlalchemy_limit]
+    # [END cloud_sql_postgres_sqlalchemy_limit]
 
-        # [START cloud_sql_postgres_sqlalchemy_backoff]
+    # [START cloud_sql_postgres_sqlalchemy_backoff]
         # SQLAlchemy automatically uses delays between failed connection attempts,
         # but provides no arguments for configuration.
-        # [END cloud_sql_postgres_sqlalchemy_backoff]
+    # [END cloud_sql_postgres_sqlalchemy_backoff]
 
-        # [START cloud_sql_postgres_sqlalchemy_timeout]
+    # [START cloud_sql_postgres_sqlalchemy_timeout]
         # 'pool_timeout' is the maximum number of seconds to wait when retrieving a
         # new connection from the pool. After the specified amount of time, an
         # exception will be thrown.
         "pool_timeout": 30,  # 30 seconds
-        # [END cloud_sql_postgres_sqlalchemy_timeout]
+    # [END cloud_sql_postgres_sqlalchemy_timeout]
 
-        # [START cloud_sql_postgres_sqlalchemy_lifetime]
+    # [START cloud_sql_postgres_sqlalchemy_lifetime]
         # 'pool_recycle' is the maximum number of seconds a connection can persist.
         # Connections that live longer than the specified amount of time will be
         # reestablished
         "pool_recycle": 1800,  # 30 minutes
-        # [END cloud_sql_postgres_sqlalchemy_lifetime]
+    # [END cloud_sql_postgres_sqlalchemy_lifetime]
+
+    # [START cloud_sql_postgres_sqlalchemy_limit]
+    # [START cloud_sql_postgres_sqlalchemy_backoff]
+    # [START cloud_sql_postgres_sqlalchemy_timeout]
+    # [START cloud_sql_postgres_sqlalchemy_lifetime]
     }
+    # [END cloud_sql_postgres_sqlalchemy_limit]
+    # [END cloud_sql_postgres_sqlalchemy_backoff]
+    # [END cloud_sql_postgres_sqlalchemy_timeout]
+    # [END cloud_sql_postgres_sqlalchemy_lifetime]
 
     if os.environ.get("DB_HOST"):
         return init_tcp_connection_engine(db_config)
@@ -80,7 +98,7 @@ def init_tcp_connection_engine(db_config):
         # Equivalent URL:
         # postgres+pg8000://<db_user>:<db_pass>@<db_host>:<db_port>/<db_name>
         sqlalchemy.engine.url.URL(
-            drivername="postgres+pg8000",
+            drivername="postgresql+pg8000",
             username=db_user,  # e.g. "my-database-user"
             password=db_pass,  # e.g. "my-database-password"
             host=db_hostname,  # e.g. "127.0.0.1"
@@ -93,7 +111,7 @@ def init_tcp_connection_engine(db_config):
         # [START cloud_sql_postgres_sqlalchemy_create_tcp]
     )
     # [END cloud_sql_postgres_sqlalchemy_create_tcp]
-
+    pool.dialect.description_encoding = None
     return pool
 
 
@@ -109,11 +127,12 @@ def init_unix_connection_engine(db_config):
     cloud_sql_connection_name = os.environ["CLOUD_SQL_CONNECTION_NAME"]
 
     pool = sqlalchemy.create_engine(
+
         # Equivalent URL:
         # postgres+pg8000://<db_user>:<db_pass>@/<db_name>
         #                         ?unix_sock=<socket_path>/<cloud_sql_instance_name>/.s.PGSQL.5432
         sqlalchemy.engine.url.URL(
-            drivername="postgres+pg8000",
+            drivername="postgresql+pg8000",
             username=db_user,  # e.g. "my-database-user"
             password=db_pass,  # e.g. "my-database-password"
             database=db_name,  # e.g. "my-database-name"
@@ -129,17 +148,19 @@ def init_unix_connection_engine(db_config):
         # [START cloud_sql_postgres_sqlalchemy_create_socket]
     )
     # [END cloud_sql_postgres_sqlalchemy_create_socket]
-
+    pool.dialect.description_encoding = None
     return pool
 
 
 # The SQLAlchemy engine will help manage interactions, including automatically
 # managing a pool of connections to your database
-db = init_connection_engine()
+db = None
 
 
 @app.before_first_request
 def create_tables():
+    global db
+    db = init_connection_engine()
     # Create tables (if they don't already exist)
     with db.connect() as conn:
         conn.execute(
@@ -151,7 +172,13 @@ def create_tables():
 
 @app.route('/', methods=['GET'])
 def index():
+    context = get_index_context()
+    print(context)
+    return render_template('index.html', **context)
+
+def get_index_context():
     votes = []
+
     with db.connect() as conn:
         # Execute the query and fetch all results
         recent_votes = conn.execute(
@@ -174,12 +201,11 @@ def index():
         space_result = conn.execute(stmt, candidate="SPACES").fetchone()
         space_count = space_result[0]
 
-    return render_template(
-        'index.html',
-        recent_votes=votes,
-        tab_count=tab_count,
-        space_count=space_count
-    )
+    return {
+        'space_count': space_count,
+        'recent_votes': votes,
+        'tab_count': tab_count,
+    }
 
 
 @app.route('/', methods=['POST'])

@@ -30,7 +30,7 @@ app = Flask(__name__)
 logger = logging.getLogger()
 
 
-def init_tcp_connection_engine():
+def init_connection_engine():
     # [START cloud_sql_server_sqlalchemy_create_tcp]
     # [START cloud_sql_sqlserver_sqlalchemy_create_tcp]
     # Remember - storing secrets in plaintext is potentially unsafe. Consider using
@@ -102,11 +102,13 @@ def init_tcp_connection_engine():
     return pool
 
 
-db = init_tcp_connection_engine()
+db = None
 
 
 @app.before_first_request
 def create_tables():
+    global db
+    db = db or init_connection_engine()
     # Create tables (if they don't already exist)
     if not db.has_table("votes"):
         metadata = sqlalchemy.MetaData(db)
@@ -122,6 +124,11 @@ def create_tables():
 
 @app.route("/", methods=["GET"])
 def index():
+    context = get_index_context()
+    return render_template("index.html", **context)
+
+
+def get_index_context():
     votes = []
     with db.connect() as conn:
         # Execute the query and fetch all results
@@ -142,9 +149,11 @@ def index():
         # Count number of votes for spaces
         space_result = conn.execute(stmt, candidate="SPACES").fetchone()
         space_count = space_result[0]
-
-    return render_template("index.html", recent_votes=votes,
-                           tab_count=tab_count, space_count=space_count)
+    return {
+        'recent_votes': votes,
+        'space_count': space_count,
+        'tab_count': tab_count,
+    }
 
 
 @app.route("/", methods=["POST"])
