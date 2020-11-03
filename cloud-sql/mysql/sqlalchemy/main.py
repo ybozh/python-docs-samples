@@ -26,7 +26,16 @@ logger = logging.getLogger()
 
 
 def init_connection_engine():
+    # [START cloud_sql_mysql_sqlalchemy_limit]
+    # [START cloud_sql_mysql_sqlalchemy_backoff]
+    # [START cloud_sql_mysql_sqlalchemy_timeout]
+    # [START cloud_sql_mysql_sqlalchemy_lifetime]
     db_config = {
+    # [END cloud_sql_mysql_sqlalchemy_limit]
+    # [END cloud_sql_mysql_sqlalchemy_backoff]
+    # [END cloud_sql_mysql_sqlalchemy_timeout]
+    # [END cloud_sql_mysql_sqlalchemy_lifetime]
+
         # [START cloud_sql_mysql_sqlalchemy_limit]
         # Pool size is the maximum number of permanent connections to keep.
         "pool_size": 5,
@@ -35,23 +44,35 @@ def init_connection_engine():
         # The total number of concurrent connections for your application will be
         # a total of pool_size and max_overflow.
         # [END cloud_sql_mysql_sqlalchemy_limit]
+
         # [START cloud_sql_mysql_sqlalchemy_backoff]
         # SQLAlchemy automatically uses delays between failed connection attempts,
         # but provides no arguments for configuration.
         # [END cloud_sql_mysql_sqlalchemy_backoff]
+
         # [START cloud_sql_mysql_sqlalchemy_timeout]
         # 'pool_timeout' is the maximum number of seconds to wait when retrieving a
         # new connection from the pool. After the specified amount of time, an
         # exception will be thrown.
         "pool_timeout": 30,  # 30 seconds
         # [END cloud_sql_mysql_sqlalchemy_timeout]
+
         # [START cloud_sql_mysql_sqlalchemy_lifetime]
         # 'pool_recycle' is the maximum number of seconds a connection can persist.
         # Connections that live longer than the specified amount of time will be
         # reestablished
         "pool_recycle": 1800,  # 30 minutes
         # [END cloud_sql_mysql_sqlalchemy_lifetime]
+
+    # [START cloud_sql_mysql_sqlalchemy_limit]
+    # [START cloud_sql_mysql_sqlalchemy_backoff]
+    # [START cloud_sql_mysql_sqlalchemy_timeout]
+    # [START cloud_sql_mysql_sqlalchemy_lifetime]
     }
+    # [END cloud_sql_mysql_sqlalchemy_limit]
+    # [END cloud_sql_mysql_sqlalchemy_backoff]
+    # [END cloud_sql_mysql_sqlalchemy_timeout]
+    # [END cloud_sql_mysql_sqlalchemy_lifetime]
 
     if os.environ.get("DB_HOST"):
         return init_tcp_connection_engine(db_config)
@@ -84,7 +105,8 @@ def init_tcp_connection_engine(db_config):
             port=db_port,  # e.g. 3306
             database=db_name,  # e.g. "my-database-name"
         ),
-        # ... Specify additional properties here.
+        # Use `**db_config` from the configuration examples to
+        # specify additional options here.
         # [END cloud_sql_mysql_sqlalchemy_create_tcp]
         **db_config
         # [START cloud_sql_mysql_sqlalchemy_create_tcp]
@@ -119,8 +141,8 @@ def init_unix_connection_engine(db_config):
                     cloud_sql_connection_name)  # i.e "<PROJECT-NAME>:<INSTANCE-REGION>:<INSTANCE-NAME>"
             }
         ),
-        # ... Specify additional properties here.
-
+        # Use `**db_config` from the configuration examples to
+        # specify additional options here.
         # [END cloud_sql_mysql_sqlalchemy_create_socket]
         **db_config
         # [START cloud_sql_mysql_sqlalchemy_create_socket]

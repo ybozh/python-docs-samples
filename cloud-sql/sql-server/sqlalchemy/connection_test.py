@@ -44,7 +44,7 @@ def tcp_db_connection():
 
 def _common_setup():
     try:
-        pool = main.init_connection_engine()
+        pool = main.init_tcp_connection_engine()
     except pyodbc.OperationalError as e:
         logger.warning(
             'Could not connect to the production database. '
