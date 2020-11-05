@@ -93,10 +93,10 @@ if os.getenv('GAE_APPLICATION', None):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.mysql',
-            'HOST': '/cloudsql/[YOUR-CONNECTION-NAME]',
-            'USER': '[YOUR-USERNAME]',
-            'PASSWORD': '[YOUR-PASSWORD]',
-            'NAME': '[YOUR-DATABASE]',
+            'HOST': '/cloudsql/temp-tutorial-prpject:europe-west3:polls-instance',
+            'USER': 'polls-user',
+            'PASSWORD': '123456',
+            'NAME': 'polls',
         }
     }
 else:
@@ -111,9 +111,9 @@ else:
             'ENGINE': 'django.db.backends.mysql',
             'HOST': '127.0.0.1',
             'PORT': '3306',
-            'NAME': '[YOUR-DATABASE]',
-            'USER': '[YOUR-USERNAME]',
-            'PASSWORD': '[YOUR-PASSWORD]',
+            'NAME': 'polls',
+            'USER': 'polls-user',
+            'PASSWORD': '123456',
         }
     }
 # [END db_setup]
